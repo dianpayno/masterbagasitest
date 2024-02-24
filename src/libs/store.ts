@@ -1,12 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import  cartReducer  from "./features/Cart/CheckoutSlice";
 import warehouseReducer from "./features/Cart/WarehouseSlice";
+import cartWHReducer from "./features/Cart/CheckoutWHslice";
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       cart: cartReducer,
-      warehouse: warehouseReducer
+      warehouse: warehouseReducer,
+      cartWH: cartWHReducer
     },
   });
 };

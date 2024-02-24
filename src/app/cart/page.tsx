@@ -8,127 +8,45 @@ import WarehouseCart from "@/components/WarehouseCart";
 import Button from "@/components/Button";
 import Action from "@/components/Action";
 import ModalAdd from "@/components/ModalAdd";
-import { useEffect, useState } from "react";
-import { useAppDispatch } from "@/libs/hooks";
-import { SAVE_SELECTEDITEMS } from "@/libs/features/Cart/CheckoutSlice";
+import { useState } from "react";
 import Checkout from "@/components/Checkout";
-import { CartItems } from "@/data/CartItem";
 import Link from "next/link";
 import CartEmpty from "@/components/CartEmpty";
-import { useAppSelector } from "@/libs/hooks";
-import { RootState } from "@/libs/store";
+import { useCartWarehouse } from "@/hooks/useCartWarehouse";
+import { useCart } from "@/hooks/useCart";
+import Toast from "@/components/Toast";
 
 const Cart = () => {
   const [openModal, setOpenModal] = useState(false);
-  const [cart, setCart] = useState<any>(CartItems);
-  const [totalSelectedItem, setTotalSelectedItem] = useState<any>([]);
-  const [allIsChecked, setAllIsChecked] = useState(false);
-  const dispatch = useAppDispatch();
-  const warehouseData = useAppSelector((state: RootState) => state.warehouse.warehouse);
+  const {
+    cartWH,
+    handleSelectedItemWH,
+    handleSelectedAllItemWH,
+    selectAllWH,
+    deleteAllItem,
+  } = useCartWarehouse();
+  const {
+    handlePlusQtyItem,
+    cart,
+    handleMinusQtyItem,
+    handleSelectedItem,
+    handleDeleteItem,
+    handleSelectedAllItem,
+    handleDeleteAllItem,
+    totalSelectedItem,
+    allIsChecked,
+    toast,
+    setToast
+  } = useCart();
 
-  const handlePlusQtyItem = (index: number) => {
-    const updateCart = [...cart];
-    updateCart[index].qty += 1;
-    setCart(updateCart);
-    if(totalSelectedItem.length >0){
-      setTotalSelectedItem(
-        totalSelectedItem.map((i: any) => {
-          if (i.id === updateCart[index].id) {
-            return { ...i, qty: i.qty + 1 };
-          }
-          return i;
-        })
-      );
-    }
-  };
-
-  const handleMinusQtyItem = (index: number) => {
-    const updateCart = [...cart];
-    updateCart[index].qty -= 1;
-    setCart(updateCart);
-    if(totalSelectedItem.length >0){
-      setTotalSelectedItem(
-        totalSelectedItem.map((i: any) => {
-          if (i.id === updateCart[index].id) {
-            return { ...i, qty: i.qty - 1 };
-          }
-          return i;
-        })
-      );
-    }
-  };
-
-  const handleSelectedItem = (e: any, item: any, index: number) => {
-    const updateCart = [...cart];
-    if (e.target.checked) {
-      setAllIsChecked(false);
-      setTotalSelectedItem([...totalSelectedItem, item]);
-      const updateItem = { ...item, isChecked: true };
-      updateCart[index] = updateItem;
-      setCart(updateCart);
-    } else {
-      if (allIsChecked) {
-        setAllIsChecked(false);
-      }
-      setTotalSelectedItem(
-        totalSelectedItem.filter((i: any) => i.id !== item.id)
-      );
-      const updateItem = { ...item, isChecked: false };
-      updateCart[index] = updateItem;
-      setCart(updateCart);
-    }
-  };
-
-  const handleSelectedAllItem = (e: any) => {
-    setAllIsChecked(e.target.checked);
-    const updateCart = [...cart];
-    if (e.target.checked) {
-      updateCart.forEach((i: any, index: number) => {
-      const updateItem = { ...i, isChecked: true };
-      updateCart[index] = updateItem;
-      })
-      setTotalSelectedItem(cart);
-    } else {
-      updateCart.forEach((i: any, index: number) => {
-        const updateItem = { ...i, isChecked: false };
-        updateCart[index] = updateItem;
-        })
-      setTotalSelectedItem([]);
-    }
-    setCart(updateCart);
-  };
-
-  useEffect(() => {
-    dispatch(SAVE_SELECTEDITEMS(totalSelectedItem));
-    console.log(warehouseData, 'redux');
-  }, [totalSelectedItem, handleSelectedAllItem, handleSelectedItem, warehouseData]);
-
-  useEffect(() => {
-    const isTrue = cart.filter((i: any) => {
-      return i.isChecked;
-    });
-    if (isTrue.length === cart.length) {
-      setAllIsChecked(true);
-    }
-  }, [cart]);
-
-  const handleDeleteItem = (id: number) => {
-    const updateCart = cart.filter((i: any) => i.id !== id);
-    setCart(updateCart);
-    setTotalSelectedItem(totalSelectedItem.filter((i: any) => i.id !== id));
-  }
-
-  const handleDeleteAllItem = () => {
-    setCart([]);
-    setTotalSelectedItem([]);
-  }
+  
 
   return (
     <div className="grid grid-cols-3 gap-3 p-5">
       {/* left section */}
       {/* breadcrumb */}
 
-      <div className="col-span-2">
+      <div className="col-span-2 relative">
         <div className="w-full bg-white shadow-md py-3 px-5 gap-3 rounded-lg flex items-center">
           <Link href={"/"}>
             <span className="text-sm ">Home </span>
@@ -136,6 +54,11 @@ const Cart = () => {
           <MdKeyboardArrowRight className="text-sm" />
           <span className="text-sm font-semibold">Keranjang</span>
         </div>
+        {
+          toast &&  <Toast/>
+        }
+      
+        
 
         {/* main section */}
         <div className="w-full mt-2 bg-white shadow-md py-4 px-5 rounded-lg flex flex-col gap-3">
@@ -145,29 +68,32 @@ const Cart = () => {
           </div>
 
           {/* action */}
-          <Action
-            isChecked={allIsChecked}
-            handleDeleteAll={handleDeleteAllItem}
-            handleChange={handleSelectedAllItem}
-          />
+          {cart.length === 0 ? null : (
+            <Action
+              isChecked={allIsChecked}
+              handleDeleteAll={handleDeleteAllItem}
+              handleChange={handleSelectedAllItem}
+            />
+          )}
 
           {/* cart item section */}
-          {
-            cart.length === 0 ? <CartEmpty/> :
-          <div>
-            {cart.map((item: any, index: any) => (
-              <CartItem
-                key={item.id}
-                data={item}
-                index={index}
-                handleDelete={handleDeleteItem}
-                handleSelectedItem={handleSelectedItem}
-                handleMinusQtyItem={handleMinusQtyItem}
-                handlePlusQtyItem={handlePlusQtyItem}
-              />
-            ))}
-          </div>
-          }
+          {cart.length === 0 ? (
+            <CartEmpty />
+          ) : (
+            <div>
+              {cart.map((item: any, index: number) => (
+                <CartItem
+                  key={item.id}
+                  data={item}
+                  index={index}
+                  handleDelete={handleDeleteItem}
+                  handleSelectedItem={handleSelectedItem}
+                  handleMinusQtyItem={handleMinusQtyItem}
+                  handlePlusQtyItem={handlePlusQtyItem}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* warehouse cart section */}
@@ -186,11 +112,31 @@ const Cart = () => {
           <div className="w-full p-3 bg-gray-800 rounded-lg">
             <span className="text-white font-bold">Daftar Barang Kiriman </span>
           </div>
-          <Action />
+          {cartWH.length === 0 ? null : (
+            <Action
+              isChecked={selectAllWH}
+              handleDeleteAll={deleteAllItem}
+              handleChange={handleSelectedAllItemWH}
+            />
+          )}
 
           {/* cart item section */}
           <div>
-            <WarehouseCart />
+            {cartWH.length === 0 ? (
+              <CartEmpty />
+            ) : (
+              cartWH.map((item: any, index: any) => {
+                return (
+                  <div key={index}>
+                    <WarehouseCart
+                      index={index}
+                      handleSelectWH={handleSelectedItemWH}
+                      data={item}
+                    />
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
         {/* ---end left section */}

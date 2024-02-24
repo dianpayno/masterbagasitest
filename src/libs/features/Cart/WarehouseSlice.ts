@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { WarehouseCart } from "@/interface/Warehouse";
+import { WarehouseInterface } from "@/interface/Warehouse";
 
-const initialState: { warehouse: WarehouseCart[] } = {
+const initialState: { warehouse:WarehouseInterface[]  } = {
     warehouse: [],
 }
 

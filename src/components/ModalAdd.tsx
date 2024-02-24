@@ -1,80 +1,68 @@
-import { Input, InputGroup, InputRightAddon } from "@chakra-ui/react";
+import {
+  Input,
+  InputGroup,
+  InputRightAddon,
+  InputLeftElement,
+} from "@chakra-ui/react";
 import { formatPrice } from "@/ulits/formatPrice";
-import { useState, useEffect } from "react";
-import { WarehouseCart } from "@/interface/Warehouse";
-import { WarehouseItem } from "@/data/CartItem";
-import { SAVE_WAREHOUSEITEMS } from "@/libs/features/Cart/WarehouseSlice";
-import { useAppDispatch } from "@/libs/hooks";
-
+import { useWarehouse } from "@/hooks/useWarehouse";
 
 type modalProps = {
   setOpenModal: any;
 };
 
 const ModalAdd = ({ setOpenModal }: modalProps) => {
+  const { dataWarehouse, handleChange, submitDataItem } = useWarehouse();
 
-  const [dataWarehouse, setDataWarehouse] = useState<WarehouseCart>({
-    namaBarang: "",
-    qty: 0,
-    price: 0,
-    berat: 0,
-    isChecked: false,
-  });
-  const dispatch = useAppDispatch();
-
-  const handleChange = (e:any) => {
-    const { name, value } = e.target;
-    setDataWarehouse({ ...dataWarehouse, [name]: value });
-  }
-
-  const submitDataItem = (e:any) => {
-    e.preventDefault();
-    WarehouseItem.push(dataWarehouse);
-    dispatch(SAVE_WAREHOUSEITEMS(WarehouseItem));
-    setOpenModal(false);
-    setDataWarehouse({
-      namaBarang: "",
-      qty: 0,
-      price: 0,
-      berat: 0,
-      isChecked: false,
-    })
-  }
-
- 
   return (
     <div className="modal-box w-11/12 max-w-5xl">
-      <form method="dialog" >
+      <form method="dialog">
         <button
           onClick={setOpenModal}
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
         >
           ✕
         </button>
-      </form >
+      </form>
       <h3 className="font-semibold text-xl">
         Tambah Barang untuk dikirim ke Warehouse
       </h3>
-      <form onSubmit={submitDataItem}>
+      <form>
         <div className="grid grid-cols-2 my-4 ">
           <div className="col-span-1 p-3">
             <label>
               Nama<span className="text-red-600">*</span>
             </label>
-            <Input 
-            name="namaBarang"
-            onChange={handleChange}
-            value={dataWarehouse.namaBarang}
-            type="text" placeholder="Masukan nama barang" />
+            <Input
+              name="namaBarang"
+              onChange={handleChange}
+              value={dataWarehouse.namaBarang}
+              type="text"
+              placeholder="Masukan nama barang"
+            />
           </div>
           <div className="col-span-1 p-3">
             <label>
               Estimasi harga barang / pcs<span className="text-red-600">*</span>
             </label>
-            <Input 
-            name="price"
-            onChange={handleChange}
-            type="text" value={formatPrice(dataWarehouse.price)} />
+            <InputGroup>
+              <InputLeftElement
+                pointerEvents="none"
+                color="gray.300"
+                fontSize="1.2em"
+              >
+                <span className="text-[15px] text-black">
+                Rp
+
+                </span>
+              </InputLeftElement>
+              <Input
+                name="price"
+                onChange={handleChange}
+                type="text"
+                value={dataWarehouse.price}
+              />
+            </InputGroup>
           </div>
         </div>
 
@@ -84,28 +72,36 @@ const ModalAdd = ({ setOpenModal }: modalProps) => {
               Estimasi berat barang / pcs<span className="text-red-600">*</span>
             </label>
             <InputGroup>
-              <Input 
-              name="berat"
-              onChange={handleChange}
-              type="number" value={dataWarehouse.berat} />
+              <Input
+                name="berat"
+                onChange={handleChange}
+                type="number"
+                value={dataWarehouse.berat}
+              />
               <InputRightAddon>Kg</InputRightAddon>
             </InputGroup>
           </div>
           <div className="col-span-1 p-3">
             <label>
-              Kuntitas<span className="text-red-600">*</span>
+              Kuantitas<span className="text-red-600">*</span>
             </label>
-            <Input 
-            name="qty"
-            onChange={handleChange}
-            type="number" />
+            <Input
+              name="qty"
+              onChange={handleChange}
+              type="number"
+              value={dataWarehouse.qty}
+            />
           </div>
           <div className="col-span-1 p-3">
             <label>
               Estimasi berat barang / pcs<span className="text-red-600">*</span>
             </label>
             <InputGroup>
-              <Input type="text" value={dataWarehouse.berat*dataWarehouse.qty} disabled/>
+              <Input
+                type="text"
+                value={dataWarehouse.berat * dataWarehouse.qty}
+                disabled
+              />
               <InputRightAddon>Kg</InputRightAddon>
             </InputGroup>
           </div>
@@ -113,14 +109,20 @@ const ModalAdd = ({ setOpenModal }: modalProps) => {
             <label>
               Estimasi total harga<span className="text-red-600">*</span>
             </label>
-            <Input type="text" value={formatPrice(dataWarehouse.price*dataWarehouse.qty)} disabled/>
+            <Input
+              type="text"
+              value={formatPrice(dataWarehouse.price * dataWarehouse.qty)}
+              disabled
+            />
           </div>
         </div>
 
         <div className="flex justify-end gap-3 my-5">
-          <button 
-        type="submit"
-          className="px-3 py-2 bg-red-600 rounded-xl text-white font-semibold">
+          <button
+            onClick={submitDataItem}
+            type="button"
+            className="px-3 py-2 bg-red-600 rounded-xl text-white font-semibold"
+          >
             Simpan
           </button>
           <button
